@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block body_content %}
+    <div class="aurora"></div>
+    <main class="container about-page">
+        <header class="hero">
+            <div class="hero-brand">
+                <img src="{{ asset_url('logo.png') }}" alt="Customer Behavioral Insights logo" class="hero-logo">
+                <span class="hero-brand-name">Customer Behavioral Insights</span>
+            </div>
+            <p class="eyebrow">Reference</p>
+            <h1>About, KPI Definition, and Data Dictionary</h1>
+            <p class="subhead">Reference page describing how key metrics are computed and which columns are used from each dataset.</p>
+            <p class="about-actions">
+                <a class="btn btn-light" href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+            </p>
+        </header>
+
+        <section class="about-section" id="kpi-definitions">
+            <h2>KPI Definitions</h2>
+            <div class="about-grid">
+                {% for item in kpi_definitions %}
+                    <article class="about-card">
+                        <h3>{{ item.name }}</h3>
+                        <p>{{ item.definition }}</p>
+                    </article>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="about-section" id="data-dictionary">
+            <h2>Data Dictionary</h2>
+            <div class="dictionary-table-wrap">
+                <table class="dictionary-table">
+                    <thead>
+                        <tr>
+                            <th>Dataset</th>
+                            <th>Fields</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dataset in data_dictionary %}
+                            <tr>
+                                <td>{{ dataset.dataset }}</td>
+                                <td>{{ dataset.fields | join(', ') }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    {% include "partials/dashboard_footer.html" %}
+{% endblock %}

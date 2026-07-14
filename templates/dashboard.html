@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block head_extra %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+{% endblock %}
+
+{% block body_content %}
+    <div class="aurora"></div>
+    <main
+        id="dashboard-data"
+        class="container"
+        data-browsing-labels="{{ charts.browsing_labels | e }}"
+        data-browsing-values="{{ charts.browsing_values | e }}"
+        data-device-labels="{{ charts.device_labels | e }}"
+        data-device-values="{{ charts.device_values | e }}"
+        data-monthly-labels="{{ charts.monthly_labels | e }}"
+        data-monthly-values="{{ charts.monthly_values | e }}"
+        data-monthly-orders-values="{{ charts.monthly_orders_values | e }}"
+        data-monthly-avg-order-value="{{ charts.monthly_avg_order_value | e }}"
+        data-city-labels="{{ charts.city_labels | e }}"
+        data-city-values="{{ charts.city_values | e }}"
+        data-traffic-labels="{{ charts.traffic_labels | e }}"
+        data-traffic-values="{{ charts.traffic_values | e }}"
+    >
+        {% include "partials/dashboard_header.html" %}
+        {% include "partials/dashboard_metrics.html" %}
+        {% include "partials/dashboard_charts.html" %}
+    </main>
+
+    {% include "partials/dashboard_footer.html" %}
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ asset_url('js/dashboard/utils.js') }}" defer></script>
+    <script src="{{ asset_url('js/dashboard/filters.js') }}" defer></script>
+    <script src="{{ asset_url('js/dashboard/charts/shared.js') }}" defer></script>
+    <script src="{{ asset_url('js/dashboard/charts/browsing_chart.js') }}" defer></script>
+    <script src="{{ asset_url('js/dashboard/charts/device_chart.js') }}" defer></script>
+    <script src="{{ asset_url('js/dashboard/charts/monthly_revenue_chart.js') }}" defer></script>
+    <script src="{{ asset_url('js/dashboard/charts/city_chart.js') }}" defer></script>
+    <script src="{{ asset_url('js/dashboard/charts/traffic_source_chart.js') }}" defer></script>
+    <script src="{{ asset_url('js/dashboard/charts.js') }}" defer></script>
+    <script src="{{ asset_url('js/dashboard/init.js') }}" defer></script>
+{% endblock %}

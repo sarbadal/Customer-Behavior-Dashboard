@@ -1,0 +1,22 @@
+<section class="metric-grid">
+    <article class="metric-card">
+        <h2>Total Users</h2>
+        <p>{{ "{:,}".format(metrics.total_users) }}</p>
+    </article>
+    <article class="metric-card">
+        <h2>Total Sessions</h2>
+        <p>{{ "{:,}".format(metrics.total_sessions) }}</p>
+    </article>
+    <article class="metric-card">
+        <h2>Total Orders</h2>
+        <p>{{ "{:,}".format(metrics.total_orders) }}</p>
+    </article>
+    <article class="metric-card">
+        <h2>Revenue</h2>
+        <p>${{ "{:,.0f}".format(metrics.total_revenue) }}</p>
+    </article>
+    <article class="metric-card">
+        <h2>Avg Time / Page</h2>
+        <p>{{ metrics.avg_time_spent }}s</p>
+    </article>
+</section>
