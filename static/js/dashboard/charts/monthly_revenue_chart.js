@@ -1,11 +1,11 @@
-function createMonthlyRevenueChart(ctx) {
+function createMonthlyRevenueChart(ctx, config = {}) {
     const canvas = document.getElementById("monthlyRevenueChart");
     if (!canvas) {
         return;
     }
 
     new Chart(canvas, {
-        type: "line",
+        type: config.type || "line",
         data: {
             labels: ctx.monthlyLabels,
             datasets: [

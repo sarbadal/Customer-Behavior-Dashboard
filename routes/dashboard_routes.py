@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request
 
 from services.dashboard_service import DashboardContextInput, build_dashboard_context
+from utils.dashboard_config import get_dashboard_ui_config
 
 
 def register_dashboard_routes(app: Flask) -> None:
@@ -20,6 +21,7 @@ def register_dashboard_routes(app: Flask) -> None:
                 end_date=end_date,
             )
         )
+        context["ui_config"] = get_dashboard_ui_config()
         return render_template("dashboard.html", **context)
 
     @app.route("/about")

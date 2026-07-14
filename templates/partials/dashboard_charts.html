@@ -1,22 +1,15 @@
 <section id="insights" class="chart-grid">
-    <article class="chart-card">
-        <h3>Top Browsing Categories</h3>
-        <canvas id="browsingChart"></canvas>
-    </article>
-    <article class="chart-card">
-        <h3>Device Distribution</h3>
-        <canvas id="deviceChart"></canvas>
-    </article>
-    <article class="chart-card wide">
-        <h3>Revenue Trend</h3>
-        <canvas id="monthlyRevenueChart"></canvas>
-    </article>
-    <article class="chart-card">
-        <h3>Top Cities by Activity</h3>
-        <canvas id="cityChart"></canvas>
-    </article>
-    <article class="chart-card">
-        <h3>Traffic Source Mix</h3>
-        <canvas id="trafficSourceChart"></canvas>
-    </article>
+    {% if ui_config.charts %}
+        {% for chart in ui_config.charts %}
+            <article class="chart-card{% if chart.wide %} wide{% endif %}">
+                <h3>{{ chart.title }}</h3>
+                <canvas id="{{ chart.canvas_id }}"></canvas>
+            </article>
+        {% endfor %}
+    {% else %}
+        <article class="chart-card wide">
+            <h3>No charts enabled</h3>
+            <p>Enable charts in config/dashboard.yaml to visualize dashboard data.</p>
+        </article>
+    {% endif %}
 </section>

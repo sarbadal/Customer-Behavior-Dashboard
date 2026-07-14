@@ -1,11 +1,11 @@
-function createTrafficSourceChart(ctx) {
+function createTrafficSourceChart(ctx, config = {}) {
     const canvas = document.getElementById("trafficSourceChart");
     if (!canvas) {
         return;
     }
 
     new Chart(canvas, {
-        type: "bar",
+        type: config.type || "bar",
         data: {
             labels: ctx.trafficLabels,
             datasets: [{

@@ -7,57 +7,68 @@
     <h1>Customer Behavior Dashboard</h1>
     <p class="subhead">Fast visual snapshot of browsing patterns, purchase behavior, and location engagement from synthetic data.</p>
 
-    <form class="filter-bar" method="get" action="{{ url_for('dashboard') }}">
-        <div class="dropdown" id="region-filter-dropdown">
-            <button type="button" class="dropdown-trigger" id="region-filter-trigger" aria-expanded="false" aria-controls="region-filter-menu">
-                Regions
-                <span class="filter-count">
-                    {% if filters.selected_regions %}
-                        {{ filters.selected_regions | length }} selected
-                    {% else %}
-                        All
-                    {% endif %}
-                </span>
-            </button>
+    {% set show_region_filter = ui_config.filters.region %}
+    {% set show_date_filter = ui_config.filters.date_range %}
+    {% set show_trend_filter = ui_config.filters.trend %}
+    {% if show_region_filter or show_date_filter or show_trend_filter %}
+        <form class="filter-bar" method="get" action="{{ url_for('dashboard') }}">
+            {% if show_region_filter %}
+                <div class="dropdown" id="region-filter-dropdown">
+                    <button type="button" class="dropdown-trigger" id="region-filter-trigger" aria-expanded="false" aria-controls="region-filter-menu">
+                        Regions
+                        <span class="filter-count">
+                            {% if filters.selected_regions %}
+                                {{ filters.selected_regions | length }} selected
+                            {% else %}
+                                All
+                            {% endif %}
+                        </span>
+                    </button>
 
-            <div class="dropdown-menu" id="region-filter-menu" role="menu" aria-labelledby="region-filter-trigger">
-                {% if filters.regions %}
-                    {% for region in filters.regions %}
-                        <label class="dropdown-option">
-                            <input type="checkbox" name="region" value="{{ region }}" {% if region in filters.selected_regions %}checked{% endif %}>
-                            <span>{{ region }}</span>
-                        </label>
-                    {% endfor %}
-                {% else %}
-                    <p class="dropdown-empty">No regions found</p>
+                    <div class="dropdown-menu" id="region-filter-menu" role="menu" aria-labelledby="region-filter-trigger">
+                        {% if filters.regions %}
+                            {% for region in filters.regions %}
+                                <label class="dropdown-option">
+                                    <input type="checkbox" name="region" value="{{ region }}" {% if region in filters.selected_regions %}checked{% endif %}>
+                                    <span>{{ region }}</span>
+                                </label>
+                            {% endfor %}
+                        {% else %}
+                            <p class="dropdown-empty">No regions found</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="filter-controls">
+                {% if show_date_filter %}
+                    <label class="date-input-wrap" for="start-date">
+                        <span>From</span>
+                        <input id="start-date" name="start_date" type="date" value="{{ filters.start_date or filters.min_date }}" min="{{ filters.min_date }}" max="{{ filters.max_date }}" class="date-input">
+                    </label>
+                    <label class="date-input-wrap" for="end-date">
+                        <span>To</span>
+                        <input id="end-date" name="end_date" type="date" value="{{ filters.end_date or filters.max_date }}" min="{{ filters.min_date }}" max="{{ filters.max_date }}" class="date-input">
+                    </label>
+                {% endif %}
+                {% if show_trend_filter %}
+                    <label class="trend-select-wrap" for="trend-select">
+                        <span>Trend</span>
+                        <select id="trend-select" name="trend" class="trend-select">
+                            {% for option in filters.trend_granularity_options %}
+                                <option value="{{ option }}" {% if option == filters.trend_granularity %}selected{% endif %}>
+                                    {{ option.title() }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </label>
                 {% endif %}
             </div>
-        </div>
 
-        <div class="filter-controls">
-            <label class="date-input-wrap" for="start-date">
-                <span>From</span>
-                <input id="start-date" name="start_date" type="date" value="{{ filters.start_date or filters.min_date }}" min="{{ filters.min_date }}" max="{{ filters.max_date }}" class="date-input">
-            </label>
-            <label class="date-input-wrap" for="end-date">
-                <span>To</span>
-                <input id="end-date" name="end_date" type="date" value="{{ filters.end_date or filters.max_date }}" min="{{ filters.min_date }}" max="{{ filters.max_date }}" class="date-input">
-            </label>
-            <label class="trend-select-wrap" for="trend-select">
-                <span>Trend</span>
-                <select id="trend-select" name="trend" class="trend-select">
-                    {% for option in filters.trend_granularity_options %}
-                        <option value="{{ option }}" {% if option == filters.trend_granularity %}selected{% endif %}>
-                            {{ option.title() }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </label>
-        </div>
-
-        <div class="filter-actions">
-            <button type="submit" class="btn btn-primary">Apply</button>
-            <a class="btn btn-light" href="{{ url_for('dashboard') }}">Clear</a>
-        </div>
-    </form>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-primary">Apply</button>
+                <a class="btn btn-light" href="{{ url_for('dashboard') }}">Clear</a>
+            </div>
+        </form>
+    {% endif %}
 </header>

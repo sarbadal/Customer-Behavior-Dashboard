@@ -1,0 +1,50 @@
+# Dashboard UI configuration
+# Toggle filters/charts and override chart titles/types.
+#
+# FILTER OPTIONS
+# - region: true|false
+# - date_range: true|false
+# - trend: true|false
+#
+# CHART OPTIONS (per chart)
+# - enabled: true|false
+# - title: any display text
+# - type: one of [bar, line, doughnut, pie, polarArea, radar]
+#
+# CHART KEYS
+# - browsing
+# - device
+# - revenue_trend
+# - city
+# - traffic
+
+filters:
+  region: true
+  date_range: true
+  trend: true
+
+charts:
+  browsing:
+    enabled: true
+    title: Top Browsing Categories
+    type: polarArea
+
+  device:
+    enabled: true
+    title: Device Distribution
+    type: doughnut
+
+  revenue_trend:
+    enabled: true
+    title: Revenue Trend
+    type: line
+
+  city:
+    enabled: true
+    title: Top Cities by Activity
+    type: polarArea
+
+  traffic:
+    enabled: true
+    title: Traffic Source Mix
+    type: bar
