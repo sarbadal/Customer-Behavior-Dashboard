@@ -1,0 +1,63 @@
+.metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+    margin: 22px 0;
+}
+
+.metric-card,
+.chart-card {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(22, 36, 45, 0.0);
+    border-radius: 10px;
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(3px);
+}
+
+.metric-card {
+    padding: 14px;
+    animation: rise 560ms ease-out;
+}
+
+.metric-card h2 {
+    margin: 0;
+    font-size: 0.86rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    color: var(--text-muted);
+}
+
+.metric-card p {
+    margin: 6px 0 0;
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 500;
+    font-size: 1.35rem;
+}
+
+.chart-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.chart-card {
+    padding: 14px;
+    min-height: 150px;
+    animation: rise 620ms ease-out;
+}
+
+.chart-card h3 {
+    margin: 0 0 8px;
+    font-size: 1rem;
+}
+
+.chart-card.wide {
+    grid-column: span 2;
+}
+
+canvas {
+    display: block;
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 16 / 6.2;
+}

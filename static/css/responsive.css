@@ -1,0 +1,36 @@
+@media (max-width: 900px) {
+    .chart-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-card.wide {
+        grid-column: span 1;
+    }
+
+    .container {
+        padding: 20px 12px 28px;
+    }
+
+    .dropdown {
+        min-width: 100%;
+    }
+
+    .filter-actions {
+        width: 100%;
+        justify-content: flex-end;
+        margin-left: 0;
+    }
+
+    .site-footer-inner {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .footer-meta {
+        text-align: left;
+    }
+
+    .dictionary-table {
+        min-width: 520px;
+    }
+}
