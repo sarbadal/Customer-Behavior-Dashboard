@@ -257,7 +257,7 @@ def _build_metrics(rows: DashboardRows) -> DashboardMetrics:
     )
 
 
-def _build_monthly_series(purchase_rows: list[dict[str, str]], granularity: str) -> MonthlySeries:
+def _build_trend_series(purchase_rows: list[dict[str, str]], granularity: str) -> MonthlySeries:
     """Aggregate revenue, order count, and average order value for a selected time grain."""
 
     # Define bucket formatters for different time granularities (daily, weekly, monthly, quarterly, yearly)
@@ -368,7 +368,7 @@ def _build_charts(rows: DashboardRows, trend_granularity: str) -> DashboardChart
     device_counts = Counter(row.get("device", "Unknown") for row in rows.browsing_rows)
     device_distribution = device_counts.most_common()
 
-    monthly_series = _build_monthly_series(
+    trend_series = _build_trend_series(
         rows.purchase_rows,
         trend_granularity,
     )
@@ -384,10 +384,10 @@ def _build_charts(rows: DashboardRows, trend_granularity: str) -> DashboardChart
         browsing_values=json.dumps([x[1] for x in top_browsing]),
         device_labels=json.dumps([x[0] for x in device_distribution]),
         device_values=json.dumps([x[1] for x in device_distribution]),
-        monthly_labels=json.dumps(monthly_series.labels),
-        monthly_values=json.dumps(monthly_series.revenue_values),
-        monthly_orders_values=json.dumps(monthly_series.orders_values),
-        monthly_avg_order_value=json.dumps(monthly_series.avg_order_value),
+        monthly_labels=json.dumps(trend_series.labels),
+        monthly_values=json.dumps(trend_series.revenue_values),
+        monthly_orders_values=json.dumps(trend_series.orders_values),
+        monthly_avg_order_value=json.dumps(trend_series.avg_order_value),
         city_labels=json.dumps([x[0] for x in top_cities]),
         city_values=json.dumps([x[1] for x in top_cities]),
         traffic_labels=json.dumps([x[0] for x in top_traffic_sources]),
