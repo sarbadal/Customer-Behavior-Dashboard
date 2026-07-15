@@ -1,11 +1,22 @@
 from __future__ import annotations
 
 import json
+import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from core.config import BASE_DIR
+import setting
+
+try:
+    from google.cloud import storage
+except ImportError:  # pragma: no cover - dependency is optional outside gcp source mode
+    storage = None
+
+try:
+    from google.oauth2 import service_account
+except ImportError:  # pragma: no cover - only required when JSON key mode is enabled
+    service_account = None
 
 try:
     import yaml
@@ -13,7 +24,6 @@ except ImportError:  # pragma: no cover - optional fallback when dependency is u
     yaml = None
 
 
-CONFIG_FILE = BASE_DIR / "config" / "dashboard.yaml"
 _ALLOWED_CHART_TYPES = {
     "bar",
     "line",
@@ -67,12 +77,91 @@ _FILTER_DEFAULTS = {
 }
 
 
-def _load_raw_config(path: Path) -> dict[str, Any]:
-    if yaml is None or not path.exists():
+def _create_gcs_client(project_id: str | None, use_json_key: bool, credentials_file: Path) -> "storage.Client":
+    if storage is None:
+        raise RuntimeError(
+            "google-cloud-storage is required for gcp_bucket dashboard config mode. Install dependencies in runtime."
+        )
+
+    # Enforce global GCP auth mode: only use JSON key when GCP_USE_JSON_KEY is enabled.
+    effective_use_json_key = bool(use_json_key and setting.GCP_USE_JSON_KEY)
+
+    if not effective_use_json_key:
+        return storage.Client(project=project_id or None)
+
+    if service_account is None:
+        raise RuntimeError("google-auth is required for JSON key mode.")
+
+    if not credentials_file.exists():
+        raise RuntimeError(f"GCP credentials file not found: {credentials_file}")
+
+    credentials = service_account.Credentials.from_service_account_file(str(credentials_file))
+    return storage.Client(project=project_id or None, credentials=credentials)
+
+
+def _resolve_dashboard_config_bucket() -> str:
+    if setting.DASHBOARD_CONFIG_GCS_BUCKET:
+        return setting.DASHBOARD_CONFIG_GCS_BUCKET
+
+    static_bucket = os.getenv("GCS_STATIC_BUCKET", "").strip()
+    if static_bucket:
+        return static_bucket
+
+    return str(setting.GCP_BUCKET_NAME).strip()
+
+
+def _load_local_yaml_text(path: Path) -> str | None:
+    if not path.exists():
+        return None
+    try:
+        return path.read_text(encoding="utf-8")
+    except OSError:
+        return None
+
+
+def _load_gcs_yaml_text() -> str | None:
+    bucket = _resolve_dashboard_config_bucket()
+    object_name = str(setting.DASHBOARD_CONFIG_GCS_OBJECT).strip("/")
+    if not bucket or not object_name:
+        return None
+
+    project_id = str(setting.DASHBOARD_CONFIG_GCS_PROJECT_ID).strip() or None
+    use_json_key = bool(setting.DASHBOARD_CONFIG_GCS_USE_JSON_KEY)
+    credentials_file = Path(setting.DASHBOARD_CONFIG_GCS_CREDENTIALS_FILE)
+
+    try:
+        gcs_client = _create_gcs_client(
+            project_id=project_id,
+            use_json_key=use_json_key,
+            credentials_file=credentials_file,
+        )
+        gcs_bucket = gcs_client.bucket(bucket)
+        blob = gcs_bucket.blob(object_name)
+        if not blob.exists():
+            return None
+        return blob.download_as_text(encoding="utf-8")
+    except Exception:
+        return None
+
+
+def _load_raw_config() -> dict[str, Any]:
+    if yaml is None:
+        return {}
+
+    source = str(setting.DASHBOARD_CONFIG_SOURCE).strip().lower()
+    yaml_text: str | None
+
+    if source == "gcp_bucket":
+        # Prefer GCS when requested, but gracefully fall back to local for resilience.
+        yaml_text = _load_gcs_yaml_text() or _load_local_yaml_text(Path(setting.DASHBOARD_CONFIG_LOCAL_FILE))
+    else:
+        yaml_text = _load_local_yaml_text(Path(setting.DASHBOARD_CONFIG_LOCAL_FILE))
+
+    if not yaml_text:
         return {}
 
     try:
-        content = yaml.safe_load(path.read_text(encoding="utf-8"))
+        content = yaml.safe_load(yaml_text)
     except Exception:
         return {}
 
@@ -136,7 +225,7 @@ def _parse_charts(raw_config: dict[str, Any]) -> tuple[list[dict[str, Any]], dic
 def get_dashboard_ui_config() -> dict[str, Any]:
     """Return dashboard UI configuration from YAML with safe defaults."""
 
-    raw_config = _load_raw_config(CONFIG_FILE)
+    raw_config = _load_raw_config()
     filters = _parse_filters(raw_config)
     charts, chart_js_config = _parse_charts(raw_config)
 

@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Literal
 
@@ -23,3 +24,23 @@ GCP_BUCKET_DATA_PREFIX = "data"
 # so Application Default Credentials are used instead of a JSON key file.
 GCP_USE_JSON_KEY = env_bool("GCP_USE_JSON_KEY", default=True)
 GCP_CREDENTIALS_FILE = BASE_DIR / "gcp" / "cred_key.json"
+
+# Dashboard YAML config source
+# - local: read from DASHBOARD_CONFIG_LOCAL_FILE
+# - gcp_bucket: read from GCS object (bucket can be dedicated, static, or data bucket)
+DASHBOARD_CONFIG_SOURCE: Literal["local", "gcp_bucket"] = os.getenv("DASHBOARD_CONFIG_SOURCE", "local").strip().lower()  # type: ignore[assignment]
+DASHBOARD_CONFIG_LOCAL_FILE = BASE_DIR / "config" / "dashboard.yaml"
+
+# Optional dedicated config bucket/object for dashboard YAML.
+# If bucket is empty and DASHBOARD_CONFIG_SOURCE='gcp_bucket', code falls back to:
+# 1) GCS_STATIC_BUCKET (if set)
+# 2) GCP_BUCKET_NAME
+DASHBOARD_CONFIG_GCS_BUCKET = os.getenv("DASHBOARD_CONFIG_GCS_BUCKET", "").strip()
+DASHBOARD_CONFIG_GCS_OBJECT = os.getenv("DASHBOARD_CONFIG_GCS_OBJECT", "config/dashboard.yaml").strip("/")
+
+# Optional GCS auth/project overrides specifically for dashboard config reads.
+DASHBOARD_CONFIG_GCS_PROJECT_ID = os.getenv("DASHBOARD_CONFIG_GCS_PROJECT_ID", GCP_PROJECT_ID).strip()
+DASHBOARD_CONFIG_GCS_USE_JSON_KEY = env_bool("DASHBOARD_CONFIG_GCS_USE_JSON_KEY", default=GCP_USE_JSON_KEY)
+DASHBOARD_CONFIG_GCS_CREDENTIALS_FILE = Path(
+	os.getenv("DASHBOARD_CONFIG_GCS_CREDENTIALS_FILE", str(GCP_CREDENTIALS_FILE))
+)
