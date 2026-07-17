@@ -87,6 +87,11 @@ def sync_static_files(static_dir: Path, bucket_name: str) -> None:
     )
 
 
+def validate_source_dir(source_dir: Path) -> None:
+    if not source_dir.exists() or not source_dir.is_dir():
+        raise RuntimeError(f"Source directory does not exist: {source_dir}")
+
+
 def ensure_public_object_access(bucket_name: str, dry_run: bool = False) -> None:
     """Grant public read access to bucket objects for static hosting."""
     cmd = [
@@ -139,7 +144,16 @@ def load_env_file(env_file: Path) -> dict[str, str]:
     return env_vars
 
 
-def deploy_function(function_name: str, project_id: str, region: str, runtime: str, source_dir: Path, entry_point: str, env_vars: dict[str, str], allow_unauthenticated: bool) -> None:
+def deploy_function(
+    function_name: str,
+    project_id: str,
+    region: str,
+    runtime: str,
+    source_dir: Path,
+    entry_point: str,
+    env_vars: dict[str, str],
+    allow_unauthenticated: bool,
+) -> None:
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", encoding="utf-8", delete=False) as temp_env_file:
         json.dump(env_vars, temp_env_file)
         temp_env_path = Path(temp_env_file.name)
@@ -229,9 +243,13 @@ def main() -> int:
         static_dir = (project_root / args.static_dir).resolve()
         source_dir = (project_root / args.source_dir).resolve()
         env_file = (project_root / args.env_file).resolve()
+        validate_source_dir(source_dir)
         env_vars = load_env_file(env_file)
         env_vars.setdefault("FLASK_ENV", "production")
         env_vars.setdefault("APP_ENV", "production")
+        env_vars.setdefault("GCS_STATIC_BUCKET", args.bucket_name)
+        env_vars.setdefault("GCS_STATIC_PREFIX", "static")
+        # Keep backwards compatibility for existing code paths expecting STATIC_BUCKET.
         env_vars["STATIC_BUCKET"] = args.bucket_name
 
         print("Starting production deployment workflow...")

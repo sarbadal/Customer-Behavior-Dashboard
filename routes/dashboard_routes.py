@@ -3,8 +3,14 @@ from flask import Flask, render_template, request
 from services.dashboard_service import DashboardContextInput, build_dashboard_context
 from utils.dashboard_config import get_dashboard_ui_config
 
+from services.sql_wate_up import update_last_access, trigger_sql_wake_up
+
 
 def dashboard() -> str:
+    """Render the main dashboard page with optional filters."""
+    update_last_access()
+    trigger_sql_wake_up()  # Trigger the SQL wake-up function on dashboard access
+
     selected_regions = [region.strip() for region in request.args.getlist("region") if region.strip()]
     trend_granularity = request.args.get("trend", "monthly").strip().lower()
     start_date = request.args.get("start_date", "").strip()
