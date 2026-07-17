@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 WAKE_SQL_URL = os.getenv("WAKE_SQL_URL", "https://REGION-PROJECT.cloudfunctions.net/wake-sql")
 WAKE_SQL_TIMEOUT_SECONDS = float(os.getenv("WAKE_SQL_TIMEOUT_SECONDS", "5"))
+FIRESTORE_DATABASE_ID = os.getenv("FIRESTORE_DATABASE_ID", "(default)")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_LOCAL_FIRESTORE_CREDENTIALS = PROJECT_ROOT / "gcp" / "cred_key.json"
@@ -43,7 +44,7 @@ def _get_firestore_client() -> Any | None:
 
     try:
         if _running_in_google_cloud_functions():
-            return firestore.Client()
+            return firestore.Client(database=FIRESTORE_DATABASE_ID)
 
         if service_account is None:
             logger.warning("google-auth is not installed; cannot load local Firestore credentials.")
@@ -58,7 +59,11 @@ def _get_firestore_client() -> Any | None:
 
         credentials = service_account.Credentials.from_service_account_file(str(credentials_path))
         project_id = os.getenv("GOOGLE_CLOUD_PROJECT") or credentials.project_id
-        return firestore.Client(project=project_id, credentials=credentials)
+        return firestore.Client(
+            project=project_id,
+            credentials=credentials,
+            database=FIRESTORE_DATABASE_ID,
+        )
     except Exception as exc:  # noqa: BLE001
         logger.warning("Firestore client initialization failed: %s", exc)
         return None
@@ -92,5 +97,3 @@ def trigger_sql_wake_up():
     except requests.RequestException as exc:
         logger.warning("Error triggering SQL wake-up URL '%s': %s", WAKE_SQL_URL, exc)
         return False
-
- 
