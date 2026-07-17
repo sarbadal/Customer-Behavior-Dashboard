@@ -45,6 +45,9 @@ def _mysql_connect() -> "pymysql.connections.Connection":
         "database": setting.MYSQL_DATABASE,
         "charset": "utf8mb4",
         "autocommit": False,
+        "connect_timeout": int(setting.MYSQL_CONNECT_TIMEOUT),
+        "read_timeout": int(setting.MYSQL_READ_TIMEOUT),
+        "write_timeout": int(setting.MYSQL_WRITE_TIMEOUT),
     }
 
     if setting.MYSQL_SSL_CA:

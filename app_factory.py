@@ -1,4 +1,5 @@
 import os
+import logging
 
 from flask import Flask
 from flask import url_for
@@ -6,6 +7,9 @@ from flask import url_for
 import setting
 from routes import register_dashboard_routes, register_health_routes
 from utils.db import bootstrap_mysql_from_local_sqlite_if_needed
+
+
+logger = logging.getLogger(__name__)
 
 
 def _resolve_static_base_url() -> str:
@@ -33,7 +37,14 @@ def create_app() -> Flask:
     static_asset_base_url = _resolve_static_base_url()
 
     if setting.DB_AUTO_BOOTSTRAP_FROM_SQLITE:
-        bootstrap_mysql_from_local_sqlite_if_needed()
+        try:
+            bootstrap_result = bootstrap_mysql_from_local_sqlite_if_needed()
+            if bootstrap_result.get("status") not in {"ok", "skipped"}:
+                logger.warning("DB bootstrap returned unexpected status: %s", bootstrap_result)
+        except Exception as exc:
+            if setting.DB_BOOTSTRAP_FAIL_HARD:
+                raise
+            logger.warning("DB bootstrap skipped due to connection/setup error: %s", exc)
 
     @app.template_global("asset_url")
     def asset_url(filename: str) -> str:

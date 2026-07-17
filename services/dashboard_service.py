@@ -95,6 +95,35 @@ class DashboardContextInput:
     end_date: str = ""
 
 
+def _coerce_datetime(value: object) -> datetime | None:
+    """Best-effort conversion of common timestamp value types to datetime."""
+
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, bytes):
+        try:
+            value = value.decode("utf-8")
+        except UnicodeDecodeError:
+            return None
+    if not isinstance(value, str):
+        return None
+
+    text = value.strip()
+    if not text:
+        return None
+
+    # Support UTC suffix used by some exports while still accepting ISO strings.
+    if text.endswith("Z"):
+        text = f"{text[:-1]}+00:00"
+
+    try:
+        return datetime.fromisoformat(text)
+    except ValueError:
+        return None
+
+
 def _load_dashboard_rows() -> DashboardRows:
     """Load raw browsing, purchase, and location rows from the data folder."""
 
@@ -150,13 +179,10 @@ def _extract_date_bounds(rows: DashboardRows) -> tuple[str, str]:
 
     for dataset, field in time_fields:
         for row in dataset:
-            ts_text = row.get(field, "")
-            if not ts_text:
+            row_dt = _coerce_datetime(row.get(field))
+            if row_dt is None:
                 continue
-            try:
-                timestamps.append(datetime.fromisoformat(ts_text))
-            except ValueError:
-                continue
+            timestamps.append(row_dt)
 
     if not timestamps:
         return "", ""
@@ -189,12 +215,8 @@ def _apply_date_range_filter(rows: DashboardRows, start_date: str, end_date: str
         end_dt = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1) - timedelta(microseconds=1)
 
     def within_bounds(row: dict[str, str], ts_key: str) -> bool:
-        ts_text = row.get(ts_key, "")
-        if not ts_text:
-            return False
-        try:
-            row_dt = datetime.fromisoformat(ts_text)
-        except ValueError:
+        row_dt = _coerce_datetime(row.get(ts_key))
+        if row_dt is None:
             return False
         return start_dt <= row_dt <= end_dt
 
@@ -301,13 +323,10 @@ def _build_trend_series(purchase_rows: list[dict[str, str]], granularity: str) -
     monthly_revenue_map: dict[str, float] = defaultdict(float)
     monthly_orders_map: dict[str, int] = defaultdict(int)
     for row in purchase_rows:
-        dt_text = row.get("order_timestamp", "")
-        if not dt_text:
+        row_dt = _coerce_datetime(row.get("order_timestamp"))
+        if row_dt is None:
             continue
-        try:
-            time_key = bucket_key(datetime.fromisoformat(dt_text))
-        except ValueError:
-            continue
+        time_key = bucket_key(row_dt)
         monthly_revenue_map[time_key] += safe_float(row.get("order_value"))
         monthly_orders_map[time_key] += 1
 

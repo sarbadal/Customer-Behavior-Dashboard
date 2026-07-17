@@ -8,6 +8,16 @@ load_env_file(resolve_env_file())
 app = create_app()
 
 
+def entry_point() -> None:
+    """
+    Entry point for running the Flask app.
+
+    This is Important for cloud deployment platforms like Google Cloud Run, 
+    which expect a callable named `entry_point` to start the application.
+    """
+    return app
+
+
 if __name__ == "__main__":
     host = os.getenv("HOST", "127.0.0.1")
     port = env_int("PORT", 5000)

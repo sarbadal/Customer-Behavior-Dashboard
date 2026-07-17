@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import io
+import logging
 import re
 import sqlite3
 from pathlib import Path
@@ -24,6 +25,9 @@ try:
 except ImportError:  # pragma: no cover - dependency is optional unless mysql mode is used
     pymysql = None
     DictCursor = None
+
+
+logger = logging.getLogger(__name__)
 
 
 def _read_local_csv_rows(path: Path) -> list[dict[str, str]]:
@@ -79,6 +83,9 @@ def _read_mysql_rows(table_name: str) -> list[dict[str, str]]:
         "charset": "utf8mb4",
         "cursorclass": DictCursor,
         "autocommit": True,
+        "connect_timeout": int(setting.MYSQL_CONNECT_TIMEOUT),
+        "read_timeout": int(setting.MYSQL_READ_TIMEOUT),
+        "write_timeout": int(setting.MYSQL_WRITE_TIMEOUT),
     }
 
     if setting.MYSQL_SSL_CA:
@@ -144,7 +151,21 @@ def read_csv_rows(path: Path) -> list[dict[str, str]]:
 
     if data_source == "mysql":
         table_name = _table_name_from_csv_filename(path.name, data_source="mysql")
-        return _read_mysql_rows(table_name=table_name)
+        try:
+            return _read_mysql_rows(table_name=table_name)
+        except Exception as exc:
+            if not setting.MYSQL_FALLBACK_TO_SQLITE:
+                raise
+
+            sqlite_table_name = _table_name_from_csv_filename(path.name, data_source="sqlite")
+            sqlite_db_file = Path(setting.SQLITE_DB_FILE)
+            logger.warning(
+                "MySQL read failed for dataset %s; falling back to SQLite %s (%s)",
+                path.name,
+                sqlite_db_file,
+                exc,
+            )
+            return _read_sqlite_rows(db_file=sqlite_db_file, table_name=sqlite_table_name)
 
     if data_source != "gcp_bucket":
         raise RuntimeError("Invalid DATA_SOURCE in setting.py. Use 'sqlite', 'mysql', 'local', or 'gcp_bucket'.")
@@ -229,6 +250,9 @@ def check_data_source_health() -> tuple[bool, dict[str, object]]:
                 "charset": "utf8mb4",
                 "cursorclass": DictCursor,
                 "autocommit": True,
+                "connect_timeout": int(setting.MYSQL_CONNECT_TIMEOUT),
+                "read_timeout": int(setting.MYSQL_READ_TIMEOUT),
+                "write_timeout": int(setting.MYSQL_WRITE_TIMEOUT),
             }
             if setting.MYSQL_SSL_CA:
                 connect_kwargs["ssl"] = {"ca": setting.MYSQL_SSL_CA}

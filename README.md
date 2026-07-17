@@ -107,7 +107,10 @@ Common runtime env vars:
 - `GCS_STATIC_BUCKET` and `GCS_STATIC_PREFIX` (optional, used to auto-build static URL)
 - `GCP_USE_JSON_KEY` (boolean; default: `true`)
 - `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE` (for `DATA_SOURCE=mysql`)
+- `MYSQL_CONNECT_TIMEOUT`, `MYSQL_READ_TIMEOUT`, `MYSQL_WRITE_TIMEOUT` (for MySQL network behavior)
 - `DB_AUTO_BOOTSTRAP_FROM_SQLITE` (default: `true`; when mysql is selected, creates missing tables and seeds from local SQLite)
+- `DB_BOOTSTRAP_FAIL_HARD` (default: `false`; when `true`, startup fails if bootstrap cannot connect)
+- `MYSQL_FALLBACK_TO_SQLITE` (default: `false`; when `true`, data reads fall back to local SQLite if MySQL is unavailable)
 
 Boolean values are parsed as true for: `1`, `true`, `yes`, `on`.
 
@@ -132,10 +135,13 @@ Configured in `setting.py`:
 		- `MYSQL_DATABASE` (default: `customer_behavior`)
 	- Optional:
 		- `MYSQL_SSL_CA` for TLS CA certificate path
+		- `MYSQL_CONNECT_TIMEOUT`, `MYSQL_READ_TIMEOUT`, `MYSQL_WRITE_TIMEOUT`
 		- `MYSQL_TABLE_BROWSING_HISTORY`, `MYSQL_TABLE_PURCHASE_PATTERNS`, `MYSQL_TABLE_LOCATION_DATA`
 		  to map custom table names.
 		- `DB_AUTO_BOOTSTRAP_FROM_SQLITE=true` to auto-create missing MySQL tables and seed from
 		  local `SQLITE_DB_FILE` at app startup.
+		- `DB_BOOTSTRAP_FAIL_HARD=false` to continue startup when MySQL bootstrap cannot connect.
+		- `MYSQL_FALLBACK_TO_SQLITE=true` to keep serving dashboard data from SQLite during MySQL outages.
 
 - `DATA_SOURCE = "local"`
 	- Reads from the local `data/` folder.

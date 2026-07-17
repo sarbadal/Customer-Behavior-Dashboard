@@ -20,10 +20,15 @@ MYSQL_USER = os.getenv("MYSQL_USER", "root").strip()
 MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "").strip()
 MYSQL_DATABASE = os.getenv("MYSQL_DATABASE", "customer_behavior").strip()
 MYSQL_SSL_CA = os.getenv("MYSQL_SSL_CA", "").strip()
+MYSQL_CONNECT_TIMEOUT = env_int("MYSQL_CONNECT_TIMEOUT", 8)
+MYSQL_READ_TIMEOUT = env_int("MYSQL_READ_TIMEOUT", 15)
+MYSQL_WRITE_TIMEOUT = env_int("MYSQL_WRITE_TIMEOUT", 15)
 MYSQL_TABLE_BROWSING_HISTORY = os.getenv("MYSQL_TABLE_BROWSING_HISTORY", "browsing_history").strip()
 MYSQL_TABLE_PURCHASE_PATTERNS = os.getenv("MYSQL_TABLE_PURCHASE_PATTERNS", "purchase_patterns").strip()
 MYSQL_TABLE_LOCATION_DATA = os.getenv("MYSQL_TABLE_LOCATION_DATA", "location_data").strip()
 DB_AUTO_BOOTSTRAP_FROM_SQLITE = env_bool("DB_AUTO_BOOTSTRAP_FROM_SQLITE", default=True)
+DB_BOOTSTRAP_FAIL_HARD = env_bool("DB_BOOTSTRAP_FAIL_HARD", default=False)
+MYSQL_FALLBACK_TO_SQLITE = env_bool("MYSQL_FALLBACK_TO_SQLITE", default=False)
 
 # gs://customer-behavior-dashboard/data/browsing_history.csv
 
