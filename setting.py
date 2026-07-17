@@ -2,13 +2,28 @@ import os
 from pathlib import Path
 from typing import Literal
 
-from utils.env_config import env_bool
+from utils.env_config import env_bool, env_int
 
 
 BASE_DIR = Path(__file__).resolve().parent
 
-# Choose one: "local" or "gcp_bucket"
-DATA_SOURCE: Literal["local", "gcp_bucket"] = "local"
+# Choose one: "sqlite", "mysql", "local", or "gcp_bucket"
+DATA_SOURCE: Literal["sqlite", "mysql", "local", "gcp_bucket"] = os.getenv("DATA_SOURCE", "sqlite").strip().lower()  # type: ignore[assignment]
+
+# SQLite database path (used when DATA_SOURCE="sqlite")
+SQLITE_DB_FILE = Path(os.getenv("SQLITE_DB_FILE", str(BASE_DIR / "data" / "customer_behavior.db")))
+
+# MySQL settings (used when DATA_SOURCE="mysql")
+MYSQL_HOST = os.getenv("MYSQL_HOST", "127.0.0.1").strip()
+MYSQL_PORT = env_int("MYSQL_PORT", 3306)
+MYSQL_USER = os.getenv("MYSQL_USER", "root").strip()
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "").strip()
+MYSQL_DATABASE = os.getenv("MYSQL_DATABASE", "customer_behavior").strip()
+MYSQL_SSL_CA = os.getenv("MYSQL_SSL_CA", "").strip()
+MYSQL_TABLE_BROWSING_HISTORY = os.getenv("MYSQL_TABLE_BROWSING_HISTORY", "browsing_history").strip()
+MYSQL_TABLE_PURCHASE_PATTERNS = os.getenv("MYSQL_TABLE_PURCHASE_PATTERNS", "purchase_patterns").strip()
+MYSQL_TABLE_LOCATION_DATA = os.getenv("MYSQL_TABLE_LOCATION_DATA", "location_data").strip()
+DB_AUTO_BOOTSTRAP_FROM_SQLITE = env_bool("DB_AUTO_BOOTSTRAP_FROM_SQLITE", default=True)
 
 # gs://customer-behavior-dashboard/data/browsing_history.csv
 

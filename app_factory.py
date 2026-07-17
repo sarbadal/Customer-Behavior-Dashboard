@@ -3,7 +3,9 @@ import os
 from flask import Flask
 from flask import url_for
 
-from routes import register_dashboard_routes
+import setting
+from routes import register_dashboard_routes, register_health_routes
+from utils.db import bootstrap_mysql_from_local_sqlite_if_needed
 
 
 def _resolve_static_base_url() -> str:
@@ -30,6 +32,9 @@ def create_app() -> Flask:
     app = Flask(__name__)
     static_asset_base_url = _resolve_static_base_url()
 
+    if setting.DB_AUTO_BOOTSTRAP_FROM_SQLITE:
+        bootstrap_mysql_from_local_sqlite_if_needed()
+
     @app.template_global("asset_url")
     def asset_url(filename: str) -> str:
         """Resolve static asset URL from GCS/CDN in prod, else Flask static endpoint."""
@@ -39,4 +44,5 @@ def create_app() -> Flask:
         return url_for("static", filename=filename)
 
     register_dashboard_routes(app)
+    register_health_routes(app)
     return app

@@ -1,6 +1,6 @@
 # Customer Behavioral Insights Dashboard
 
-A Flask-based analytics prototype for visualizing customer behavior with synthetic CSV datasets.
+A Flask-based analytics prototype for visualizing customer behavior with synthetic datasets loaded from SQLite.
 
 The app provides:
 - KPI cards for users, sessions, orders, revenue, and average time spent.
@@ -12,7 +12,7 @@ The app provides:
 
 - Flask app factory architecture.
 - Typed dashboard service layer with dataclasses.
-- Local CSV mode and Google Cloud Storage bucket mode.
+- SQLite mode (default), MySQL mode, plus local CSV and Google Cloud Storage bucket modes.
 - Optional GCP auth strategies:
 	- Service account JSON key.
 	- Application Default Credentials (ADC).
@@ -74,13 +74,15 @@ customer-behavioral/
 2. Create and activate a virtual environment.
 3. Install dependencies.
 4. Generate synthetic data.
-5. Run the Flask app.
+5. Migrate CSV data into SQLite.
+6. Run the Flask app.
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 python3 scripts/generate_dummy_data.py
+python3 scripts/migrate_csv_to_sqlite.py
 python3 main.py
 ```
 
@@ -102,13 +104,38 @@ Common runtime env vars:
 - `PORT` (default: `5000`)
 - `DEBUG` (default: `true`)
 - `STATIC_ASSET_BASE_URL` (optional CDN/static bucket URL)
+- `GCS_STATIC_BUCKET` and `GCS_STATIC_PREFIX` (optional, used to auto-build static URL)
 - `GCP_USE_JSON_KEY` (boolean; default: `true`)
+- `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE` (for `DATA_SOURCE=mysql`)
+- `DB_AUTO_BOOTSTRAP_FROM_SQLITE` (default: `true`; when mysql is selected, creates missing tables and seeds from local SQLite)
 
 Boolean values are parsed as true for: `1`, `true`, `yes`, `on`.
 
 ## Data Source Modes
 
 Configured in `setting.py`:
+
+- `DATA_SOURCE = "sqlite"` (default)
+	- Reads from SQLite at `SQLITE_DB_FILE` (default: `data/customer_behavior.db`).
+	- To refresh the DB from CSV files:
+
+	```bash
+	python3 scripts/migrate_csv_to_sqlite.py
+	```
+
+- `DATA_SOURCE = "mysql"`
+	- Reads from a MySQL server using:
+		- `MYSQL_HOST` (default: `127.0.0.1`)
+		- `MYSQL_PORT` (default: `3306`)
+		- `MYSQL_USER` (default: `root`)
+		- `MYSQL_PASSWORD`
+		- `MYSQL_DATABASE` (default: `customer_behavior`)
+	- Optional:
+		- `MYSQL_SSL_CA` for TLS CA certificate path
+		- `MYSQL_TABLE_BROWSING_HISTORY`, `MYSQL_TABLE_PURCHASE_PATTERNS`, `MYSQL_TABLE_LOCATION_DATA`
+		  to map custom table names.
+		- `DB_AUTO_BOOTSTRAP_FROM_SQLITE=true` to auto-create missing MySQL tables and seed from
+		  local `SQLITE_DB_FILE` at app startup.
 
 - `DATA_SOURCE = "local"`
 	- Reads from the local `data/` folder.
@@ -138,6 +165,12 @@ Generate or refresh CSVs:
 python3 scripts/generate_dummy_data.py
 ```
 
+Refresh SQLite after regenerating CSVs:
+
+```bash
+python3 scripts/migrate_csv_to_sqlite.py
+```
+
 Current generator defaults:
 - 1500 rows per dataset.
 - Deterministic random seed for reproducibility.
@@ -150,9 +183,18 @@ Current generator defaults:
 - `GET /about`
 	- KPI definitions and data dictionary.
 
+- `GET /health`
+	- Basic app liveness check.
+
+- `GET /health/data`
+	- Data-source readiness check for sqlite/mysql/local/gcp_bucket.
+	- Returns `200` when healthy and `503` when validation fails.
+
 ## Deployment Notes
 
-- You can serve static assets from CDN/bucket by setting `STATIC_ASSET_BASE_URL`.
+- Serve static assets from GCS in production by setting either:
+	- `STATIC_ASSET_BASE_URL=https://storage.googleapis.com/<bucket>/<prefix>`
+	- or `GCS_STATIC_BUCKET=<bucket>` and optional `GCS_STATIC_PREFIX=<prefix>`
 - For GCP bucket data access in production, prefer `GCP_USE_JSON_KEY=false` and ADC.
 - Keep credentials out of version control.
 

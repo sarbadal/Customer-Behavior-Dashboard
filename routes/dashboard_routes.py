@@ -33,25 +33,25 @@ def register_dashboard_routes(app: Flask) -> None:
             },
             {
                 "name": "Total Sessions",
-                "definition": "Count of unique session_id values in browsing_history.csv.",
+                "definition": "Count of unique session_id values in browsing_history table.",
             },
             {
                 "name": "Total Orders",
-                "definition": "Count of unique order_id values in purchase_patterns.csv.",
+                "definition": "Count of unique order_id values in purchase_patterns table.",
             },
             {
                 "name": "Revenue",
-                "definition": "Sum of order_value from purchase_patterns.csv after numeric parsing.",
+                "definition": "Sum of order_value from purchase_patterns table after numeric parsing.",
             },
             {
                 "name": "Avg Time / Page",
-                "definition": "Average of time_spent_seconds from browsing_history.csv.",
+                "definition": "Average of time_spent_seconds from browsing_history table.",
             },
         ]
 
         data_dictionary = [
             {
-                "dataset": "browsing_history.csv",
+                "dataset": "browsing_history",
                 "fields": [
                     "user_id",
                     "session_id",
@@ -62,7 +62,7 @@ def register_dashboard_routes(app: Flask) -> None:
                 ],
             },
             {
-                "dataset": "purchase_patterns.csv",
+                "dataset": "purchase_patterns",
                 "fields": [
                     "user_id",
                     "order_id",
@@ -71,7 +71,7 @@ def register_dashboard_routes(app: Flask) -> None:
                 ],
             },
             {
-                "dataset": "location_data.csv",
+                "dataset": "location_data",
                 "fields": [
                     "user_id",
                     "event_timestamp",
