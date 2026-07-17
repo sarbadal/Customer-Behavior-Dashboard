@@ -153,6 +153,7 @@ def deploy_function(
     entry_point: str,
     env_vars: dict[str, str],
     allow_unauthenticated: bool,
+    verbose: bool,
 ) -> None:
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", encoding="utf-8", delete=False) as temp_env_file:
         json.dump(env_vars, temp_env_file)
@@ -177,8 +178,10 @@ def deploy_function(
         "--trigger-http",
         "--env-vars-file",
         str(temp_env_path),
-        "--quiet",
     ]
+
+    if not verbose:
+        cmd.append("--quiet")
 
     if allow_unauthenticated:
         cmd.append("--allow-unauthenticated")
@@ -231,6 +234,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Allow public HTTP access to the deployed function",
     )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable verbose gcloud output for troubleshooting",
+    )
     return parser.parse_args()
 
 
@@ -271,6 +279,7 @@ def main() -> int:
             entry_point=args.entry_point,
             env_vars=env_vars,
             allow_unauthenticated=args.allow_unauthenticated,
+            verbose=args.verbose,
         )
 
         print("\nDeployment completed in production mode.")

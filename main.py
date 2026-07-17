@@ -1,5 +1,8 @@
 import os
 
+from flask import Request
+from werkzeug.wrappers import Response as WerkzeugResponse
+
 from app_factory import create_app
 from utils.env_config import env_bool, env_int, load_env_file, resolve_env_file
 
@@ -8,14 +11,9 @@ load_env_file(resolve_env_file())
 app = create_app()
 
 
-def entry_point() -> None:
-    """
-    Entry point for running the Flask app.
-
-    This is Important for cloud deployment platforms like Google Cloud Run, 
-    which expect a callable named `entry_point` to start the application.
-    """
-    return app
+def entry_point(request: Request) -> WerkzeugResponse:
+    """Cloud Function HTTP entry point that forwards to the Flask WSGI app."""
+    return WerkzeugResponse.from_app(app, request.environ)
 
 
 if __name__ == "__main__":
