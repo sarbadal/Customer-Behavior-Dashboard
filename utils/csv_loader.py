@@ -89,7 +89,11 @@ def _read_mysql_rows(table_name: str) -> list[dict[str, str]]:
     }
 
     if setting.MYSQL_SSL_CA:
-        connect_kwargs["ssl"] = {"ca": setting.MYSQL_SSL_CA}
+        ssl_ca_path = Path(setting.MYSQL_SSL_CA)
+        if ssl_ca_path.is_file():
+            connect_kwargs["ssl"] = {"ca": str(ssl_ca_path)}
+        else:
+            logger.warning("MYSQL_SSL_CA file not found, connecting without custom CA: %s", ssl_ca_path)
 
     conn = pymysql.connect(**connect_kwargs)
     try:
@@ -165,7 +169,18 @@ def read_csv_rows(path: Path) -> list[dict[str, str]]:
                 sqlite_db_file,
                 exc,
             )
-            return _read_sqlite_rows(db_file=sqlite_db_file, table_name=sqlite_table_name)
+            try:
+                return _read_sqlite_rows(db_file=sqlite_db_file, table_name=sqlite_table_name)
+            except Exception as sqlite_exc:
+                local_data_dir = Path(setting.LOCAL_DATA_DIR)
+                local_csv = local_data_dir / path.name
+                logger.warning(
+                    "SQLite fallback failed for dataset %s; falling back to local CSV %s (%s)",
+                    path.name,
+                    local_csv,
+                    sqlite_exc,
+                )
+                return _read_local_csv_rows(local_csv)
 
     if data_source != "gcp_bucket":
         raise RuntimeError("Invalid DATA_SOURCE in setting.py. Use 'sqlite', 'mysql', 'local', or 'gcp_bucket'.")
@@ -255,7 +270,14 @@ def check_data_source_health() -> tuple[bool, dict[str, object]]:
                 "write_timeout": int(setting.MYSQL_WRITE_TIMEOUT),
             }
             if setting.MYSQL_SSL_CA:
-                connect_kwargs["ssl"] = {"ca": setting.MYSQL_SSL_CA}
+                ssl_ca_path = Path(setting.MYSQL_SSL_CA)
+                if ssl_ca_path.is_file():
+                    connect_kwargs["ssl"] = {"ca": str(ssl_ca_path)}
+                else:
+                    logger.warning(
+                        "MYSQL_SSL_CA file not found during health check, proceeding without custom CA: %s",
+                        ssl_ca_path,
+                    )
 
             conn = pymysql.connect(**connect_kwargs)
             try:
