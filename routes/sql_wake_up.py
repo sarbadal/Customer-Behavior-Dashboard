@@ -1,9 +1,9 @@
 from flask import Flask, jsonify
 
-from services.sql_wate_up import update_last_access
+from services.sql_wake_up import update_last_access
 
 
-def register_health_routes(app: Flask) -> None:
+def register_sql_wake_up_routes(app: Flask) -> None:
     """Attach health-check routes for runtime and data source validation."""
 
     @app.get("/heartbeat")

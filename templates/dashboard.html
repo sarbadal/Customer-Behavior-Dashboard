@@ -42,4 +42,17 @@
     <script src="{{ asset_url('js/dashboard/charts/traffic_source_chart.js') }}" defer></script>
     <script src="{{ asset_url('js/dashboard/charts.js') }}" defer></script>
     <script src="{{ asset_url('js/dashboard/init.js') }}" defer></script>
+
+    <script>
+        function sendHeartbeat() {
+            fetch("/heartbeat")
+                .catch(err => console.error("Heartbeat failed:", err));
+        }
+        
+        // Send one immediately when the dashboard loads
+        sendHeartbeat();
+        
+        // Send one every 1 minutes / 60 seconds
+        setInterval(sendHeartbeat, 60 * 1000);
+    </script>
 {% endblock %}
