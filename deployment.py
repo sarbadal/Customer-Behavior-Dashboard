@@ -10,6 +10,16 @@ import tempfile
 from pathlib import Path
 
 
+RESERVED_ENV_KEYS = {
+    "PORT",
+    "K_SERVICE",
+    "K_REVISION",
+    "K_CONFIGURATION",
+    "FUNCTION_TARGET",
+    "FUNCTION_SIGNATURE_TYPE",
+}
+
+
 def run_cmd(cmd: list[str], check: bool = True) -> subprocess.CompletedProcess[str]:
     """Run a shell command and print it for easier debugging."""
     print("\n$", " ".join(cmd))
@@ -144,6 +154,16 @@ def load_env_file(env_file: Path) -> dict[str, str]:
     return env_vars
 
 
+def strip_reserved_env_vars(env_vars: dict[str, str]) -> dict[str, str]:
+    """Remove env keys that are reserved by Cloud Functions/Cloud Run."""
+
+    removed = sorted(key for key in env_vars if key in RESERVED_ENV_KEYS)
+    if removed:
+        print(f"Skipping reserved env vars: {', '.join(removed)}")
+
+    return {key: value for key, value in env_vars.items() if key not in RESERVED_ENV_KEYS}
+
+
 def deploy_function(
     function_name: str,
     project_id: str,
@@ -252,7 +272,7 @@ def main() -> int:
         source_dir = (project_root / args.source_dir).resolve()
         env_file = (project_root / args.env_file).resolve()
         validate_source_dir(source_dir)
-        env_vars = load_env_file(env_file)
+        env_vars = strip_reserved_env_vars(load_env_file(env_file))
         env_vars.setdefault("FLASK_ENV", "production")
         env_vars.setdefault("APP_ENV", "production")
         env_vars.setdefault("GCS_STATIC_BUCKET", args.bucket_name)
