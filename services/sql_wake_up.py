@@ -77,7 +77,8 @@ def update_last_access() -> bool:
 
     try:
         client.collection("dashboard_state").document("sql_activity").set(
-            {"last_access": datetime.now(timezone.utc)}
+            {"last_access": datetime.now(timezone.utc)},
+            merge=True,
         )
         return True
     except GoogleCloudError as exc:

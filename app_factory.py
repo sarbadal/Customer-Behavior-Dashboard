@@ -5,7 +5,7 @@ from flask import Flask
 from flask import url_for
 
 import setting
-from routes import register_dashboard_routes, register_health_routes
+from routes import register_dashboard_routes, register_health_routes, register_sql_wake_routes
 from utils.db import bootstrap_mysql_from_local_sqlite_if_needed
 
 
@@ -56,4 +56,5 @@ def create_app() -> Flask:
 
     register_dashboard_routes(app)
     register_health_routes(app)
+    register_sql_wake_routes(app)
     return app

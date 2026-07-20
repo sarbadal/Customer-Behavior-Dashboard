@@ -3,7 +3,7 @@ from flask import Flask, render_template, request
 from services.dashboard_service import DashboardContextInput, build_dashboard_context
 from utils.dashboard_config import get_dashboard_ui_config
 
-from services.sql_wate_up import update_last_access, trigger_sql_wake_up
+from services.sql_wake_up import update_last_access, trigger_sql_wake_up
 
 
 def dashboard() -> str:
