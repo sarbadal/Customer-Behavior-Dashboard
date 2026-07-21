@@ -6,6 +6,13 @@
     <p class="eyebrow">Flask Prototype</p>
     <h1>Customer Behavior Dashboard</h1>
     <p class="subhead">Fast visual snapshot of browsing patterns, purchase behavior, and location engagement from synthetic data.</p>
+    <div class="session-notice" role="status" aria-live="polite" hidden>
+        <p class="session-notice-text">
+            Session is going to be over soon. If you wish to extend, please
+            <button type="button" class="session-notice-link" data-session-extend>click here</button>.
+        </p>
+        <p class="session-notice-status" data-session-status></p>
+    </div>
 
     {% set show_region_filter = ui_config.filters.region %}
     {% set show_date_filter = ui_config.filters.date_range %}

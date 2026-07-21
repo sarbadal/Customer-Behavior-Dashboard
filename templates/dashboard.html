@@ -22,6 +22,7 @@
         data-traffic-labels="{{ charts.traffic_labels | e }}"
         data-traffic-values="{{ charts.traffic_values | e }}"
         data-chart-config="{{ ui_config.chart_config_json | e }}"
+        data-session-warning-delay-ms="{{ session_warning_delay_ms }}"
     >
         {% include "partials/dashboard_header.html" %}
         {% include "partials/dashboard_metrics.html" %}

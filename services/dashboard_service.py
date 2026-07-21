@@ -5,7 +5,7 @@ from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 
-from core.config import DATA_DIR
+import setting
 from utils.csv_loader import read_csv_rows
 from utils.parsers import safe_float, safe_int
 
@@ -127,9 +127,10 @@ def _coerce_datetime(value: object) -> datetime | None:
 def _load_dashboard_rows() -> DashboardRows:
     """Load raw browsing, purchase, and location rows from the data folder."""
 
-    browsing_rows = read_csv_rows(DATA_DIR / "browsing_history.csv")
-    purchase_rows = read_csv_rows(DATA_DIR / "purchase_patterns.csv")
-    location_rows = read_csv_rows(DATA_DIR / "location_data.csv")
+    data_dir = setting.BASE_DIR / "data"
+    browsing_rows = read_csv_rows(data_dir / "browsing_history.csv")
+    purchase_rows = read_csv_rows(data_dir / "purchase_patterns.csv")
+    location_rows = read_csv_rows(data_dir / "location_data.csv")
     return DashboardRows(
         browsing_rows=browsing_rows,
         purchase_rows=purchase_rows,

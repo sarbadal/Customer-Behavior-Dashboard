@@ -4,8 +4,6 @@ from datetime import datetime, timezone
 from typing import Any
 from pathlib import Path
 
-import requests
-
 try:
     from google.cloud import firestore
     from google.cloud.exceptions import GoogleCloudError
@@ -17,8 +15,6 @@ except ImportError:  # Firestore is optional for local/dev runs.
 
 logger = logging.getLogger(__name__)
 
-WAKE_SQL_URL = os.getenv("WAKE_SQL_URL", "https://REGION-PROJECT.cloudfunctions.net/wake-sql")
-WAKE_SQL_TIMEOUT_SECONDS = float(os.getenv("WAKE_SQL_TIMEOUT_SECONDS", "5"))
 FIRESTORE_DATABASE_ID = os.getenv("FIRESTORE_DATABASE_ID", "(default)")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -86,15 +82,4 @@ def update_last_access() -> bool:
         return False
     except Exception as exc:  # noqa: BLE001
         logger.warning("Unexpected Firestore update error: %s", exc)
-        return False
-
-
-def trigger_sql_wake_up():
-    """Trigger the SQL wake-up function via an HTTP request."""
-    try:
-        response = requests.post(WAKE_SQL_URL, timeout=WAKE_SQL_TIMEOUT_SECONDS)
-        response.raise_for_status()
-        return True
-    except requests.RequestException as exc:
-        logger.warning("Error triggering SQL wake-up URL '%s': %s", WAKE_SQL_URL, exc)
         return False
