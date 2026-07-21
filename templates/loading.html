@@ -64,7 +64,7 @@
 			aria-live="polite"
 			aria-busy="true"
 			data-wake-status-url="{{ url_for('wake_status') }}"
-			data-dashboard-url="{{ url_for('dashboard') }}"
+			data-dashboard-url="{{ dashboard_url | default(url_for('dashboard')) }}"
 		>
 			<div class="spinner" aria-hidden="true"></div>
 			<h1>Preparing your dashboard...</h1>
@@ -80,6 +80,7 @@
 		const wakeStatusUrl = panel?.dataset.wakeStatusUrl || "/wake-status";
 		const dashboardUrl = panel?.dataset.dashboardUrl || "/";
 		const statusEl = document.getElementById("loading-status");
+		let pollTimerId = null;
 
 		async function checkStatus() {
 			try {
@@ -94,6 +95,26 @@
 					return;
 				}
 
+				if (data.state === "STOPED") {
+					statusEl.textContent = "Database is stopped. Triggering wake-up and waiting for READY...";
+					return;
+				}
+
+				if (data.state === "WAKING") {
+					const elapsed = Number(data.elapsed_seconds || 0);
+					const timeout = Number(data.timeout_seconds || 600);
+					statusEl.textContent = `Database is waking up (${elapsed}s / ${timeout}s). Retrying...`;
+					return;
+				}
+
+				if (data.state === "TIMEOUT") {
+					statusEl.textContent = "Database wake-up timed out after 10 minutes. Please retry.";
+					if (pollTimerId) {
+						window.clearInterval(pollTimerId);
+					}
+					return;
+				}
+
 				statusEl.textContent = "Service is waking up. Retrying shortly...";
 			} catch (error) {
 				statusEl.textContent = "Connection issue while checking status. Retrying...";
@@ -101,6 +122,6 @@
 		}
 
 		checkStatus();
-		setInterval(checkStatus, 5000);
+		pollTimerId = setInterval(checkStatus, 5000);
 	</script>
 {% endblock %}

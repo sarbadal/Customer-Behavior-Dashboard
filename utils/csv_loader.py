@@ -172,3 +172,46 @@ def check_data_source_health() -> tuple[bool, dict[str, object]]:
         return True, {**details, "message": "SQLite connection is healthy."}
     except Exception as exc:  # pragma: no cover
         return False, {**details, "message": f"SQLite health check failed: {exc}"}
+
+
+def check_runtime_db_ready() -> tuple[bool, dict[str, object]]:
+    """Check runtime DB readiness used by wake-status (connection-level, not schema-level)."""
+
+    if setting.DATA_SOURCE == "mysql":
+        details: dict[str, object] = {
+            "data_source": "mysql",
+            "host": setting.MYSQL_HOST,
+            "port": int(setting.MYSQL_PORT),
+            "database": setting.MYSQL_DATABASE,
+            "user": setting.MYSQL_USER,
+        }
+        try:
+            conn = _mysql_connect()
+            try:
+                with conn.cursor() as cursor:
+                    cursor.execute("SELECT 1")
+            finally:
+                conn.close()
+            return True, {**details, "message": "MySQL runtime connection is ready."}
+        except Exception as exc:  # pragma: no cover
+            return False, {**details, "message": f"MySQL runtime connection check failed: {exc}"}
+
+    if setting.DATA_SOURCE == "sqlite":
+        db_file = _resolve_sqlite_db_file()
+        details = {
+            "data_source": "sqlite",
+            "database_file": str(db_file),
+        }
+        if not db_file.exists():
+            return False, {**details, "message": f"SQLite database file not found: {db_file}"}
+        try:
+            with sqlite3.connect(db_file) as conn:
+                conn.execute("SELECT 1")
+            return True, {**details, "message": "SQLite runtime connection is ready."}
+        except Exception as exc:  # pragma: no cover
+            return False, {**details, "message": f"SQLite runtime connection check failed: {exc}"}
+
+    return False, {
+        "data_source": setting.DATA_SOURCE,
+        "message": "Unsupported DATA_SOURCE. Use 'sqlite' or 'mysql'.",
+    }

@@ -42,7 +42,7 @@ def create_app() -> Flask:
 
     if setting.FLASK_SECRET_KEY:
         app.secret_key = setting.FLASK_SECRET_KEY
-    elif app_access_password:
+    else:
         logger.warning("FLASK_SECRET_KEY is not set; using ephemeral key for current process.")
         app.secret_key = secrets.token_hex(32)
 

@@ -4,6 +4,9 @@ from datetime import datetime, timezone
 from typing import Any
 from pathlib import Path
 
+import setting
+from services.wake_sql_client import WakeSqlFunctionClient
+
 try:
     from google.cloud import firestore
     from google.cloud.exceptions import GoogleCloudError
@@ -83,3 +86,42 @@ def update_last_access() -> bool:
     except Exception as exc:  # noqa: BLE001
         logger.warning("Unexpected Firestore update error: %s", exc)
         return False
+
+
+def trigger_sql_wake_up() -> bool:
+    """Trigger Cloud DB wake-up endpoint when configured."""
+
+    wake_sql_url = setting.WAKE_SQL_URL
+    if not wake_sql_url:
+        logger.warning("WAKE_SQL_URL is not configured; cannot trigger DB wake-up.")
+        return False
+
+    project_id = setting.WAKE_SQL_PROJECT_ID
+    instance_id = setting.WAKE_SQL_INSTANCE_ID
+    if not project_id or not instance_id:
+        logger.warning(
+            "WAKE_SQL_PROJECT_ID or WAKE_SQL_INSTANCE_ID missing; cannot trigger DB wake-up."
+        )
+        return False
+
+    ca_bundle_path = setting.WAKE_SQL_CA_BUNDLE_PATH or None
+    client = WakeSqlFunctionClient(
+        function_url=wake_sql_url,
+        timeout_seconds=max(int(setting.WAKE_SQL_TIMEOUT_SECONDS), 1),
+        poll_seconds=max(int(setting.WAKE_SQL_POLL_SECONDS), 1),
+        max_wait_seconds=max(int(setting.WAKE_STATUS_MAX_WAIT_SECONDS), 1),
+        verify_ssl=bool(setting.WAKE_SQL_VERIFY_SSL),
+        ca_bundle_path=ca_bundle_path,
+    )
+
+    status_code, payload = client.call(project_id=project_id, instance_id=instance_id)
+    if 200 <= status_code < 300:
+        return True
+
+    logger.warning(
+        "Wake SQL request failed (status=%s) for URL '%s': %s",
+        status_code,
+        wake_sql_url,
+        payload,
+    )
+    return False
