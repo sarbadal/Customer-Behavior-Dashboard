@@ -36,6 +36,14 @@ pip install -r requirements.txt
 python3 main.py
 ```
 
+Choose env file explicitly when needed:
+
+```bash
+python3 main.py --env dev
+python3 main.py --env prod
+python3 main.py --env .env.prod
+```
+
 Open:
 
 - Dashboard: http://127.0.0.1:5000/

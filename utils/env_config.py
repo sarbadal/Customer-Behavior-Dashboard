@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import Optional
 
 
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -26,8 +27,16 @@ def load_env_file(file_path: Path) -> None:
         os.environ.setdefault(key, value)
 
 
-def resolve_env_file() -> Path:
-    """Pick env file path using ENV_FILE override or APP_ENV (dev/prod)."""
+def resolve_env_file(selected_env: Optional[str] = None) -> Path:
+    """Pick env file path using explicit selector, ENV_FILE override, or APP_ENV."""
+
+    if selected_env:
+        normalized = selected_env.strip().lower()
+        if normalized == "prod":
+            return BASE_DIR / ".env.prod"
+        if normalized == "dev":
+            return BASE_DIR / ".env.dev"
+        return Path(selected_env).expanduser()
 
     explicit_env_file = os.getenv("ENV_FILE")
     if explicit_env_file:
