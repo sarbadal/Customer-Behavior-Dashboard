@@ -7,11 +7,31 @@ import setting
 
 from services.dashboard_service import DashboardContextInput, build_dashboard_context
 from utils.dashboard_config import get_dashboard_ui_config
+from utils.csv_loader import check_runtime_db_ready
 
 from services.sql_wake_up import update_last_access
 
 
 logger = logging.getLogger(__name__)
+
+
+def _should_redirect_to_loading() -> bool:
+    """Return True when MySQL is not ready and loading flow should be shown."""
+
+    if setting.DATA_SOURCE != "mysql":
+        return False
+
+    if session.get("mysql_ready"):
+        return False
+
+    # Fallback to a direct readiness probe in case session state was not persisted.
+    is_healthy, details = check_runtime_db_ready()
+    is_cloud_db_ready = bool(is_healthy and details.get("data_source") == "mysql")
+    if is_cloud_db_ready:
+        session["mysql_ready"] = True
+        return False
+
+    return True
 
 
 def _is_mysql_connection_error(exc: Exception) -> bool:
@@ -44,7 +64,7 @@ def _is_mysql_connection_error(exc: Exception) -> bool:
 def dashboard() -> str:
     """Render the main dashboard page with optional filters."""
 
-    if setting.DATA_SOURCE == "mysql" and not session.get("mysql_ready"):
+    if _should_redirect_to_loading():
         args_multi = request.args.to_dict(flat=False)
         query = urlencode(args_multi, doseq=True)
         next_url = f"{request.path}?{query}" if query else request.path

@@ -84,7 +84,10 @@
 
 		async function checkStatus() {
 			try {
-				const response = await fetch(wakeStatusUrl, { cache: "no-store" });
+				const response = await fetch(wakeStatusUrl, {
+					cache: "no-store",
+					credentials: "same-origin",
+				});
 				if (!response.ok) {
 					throw new Error("Unexpected status code");
 				}
