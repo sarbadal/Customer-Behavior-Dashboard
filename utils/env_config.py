@@ -6,7 +6,7 @@ from typing import Optional
 BASE_DIR = Path(__file__).resolve().parents[1]
 
 
-def load_env_file(file_path: Path) -> None:
+def load_env_file(file_path: Path, override: bool = False) -> None:
     """Load key/value pairs from the selected env file before app startup."""
 
     if not file_path.exists():
@@ -24,7 +24,8 @@ def load_env_file(file_path: Path) -> None:
         if value and value[0] == value[-1] and value[0] in {'"', "'"}:
             value = value[1:-1]
 
-        os.environ.setdefault(key, value)
+        if override or key not in os.environ:
+            os.environ[key] = value
 
 
 def resolve_env_file(selected_env: Optional[str] = None) -> Path:

@@ -35,3 +35,9 @@ DASHBOARD_CONFIG_LOCAL_FILE = BASE_DIR / "config" / "dashboard.yaml"
 
 # Delay before showing the "session is going to be over soon" warning on dashboard.
 SESSION_WARNING_DELAY_MINUTES = env_int("SESSION_WARNING_DELAY_MINUTES", 30)
+
+# Optional app-level access password (when set, login is required for app pages).
+APP_ACCESS_PASSWORD = os.getenv("APP_ACCESS_PASSWORD", "0000").strip()
+
+# Flask session secret key used by app-level login sessions.
+FLASK_SECRET_KEY = os.getenv("FLASK_SECRET_KEY", "").strip()

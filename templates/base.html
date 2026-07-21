@@ -5,6 +5,22 @@
     {% block head_extra %}{% endblock %}
 </head>
 <body>
+    {% if app_password_enabled() and session.get('app_unlocked') %}
+        <form
+            class="app-logout-form"
+            method="post"
+            action="{{ url_for('app_logout') }}"
+            style="position: fixed; top: 14px; left: 50%; transform: translateX(-50%); width: min(1080px, calc(100vw - 32px)); display: flex; justify-content: flex-end; z-index: 20;"
+        >
+            <button
+                type="submit"
+                class="app-logout-button"
+                style="border: 0; border-radius: 999px; padding: 8px 14px; background: #102a43; color: #fff; font-family: 'Space Grotesk', sans-serif; font-size: 0.88rem; font-weight: 600; cursor: pointer; box-shadow: 0 6px 16px rgba(16, 42, 67, 0.24);"
+            >
+                Logout
+            </button>
+        </form>
+    {% endif %}
     {% block body_content %}{% endblock %}
     <script src="{{ asset_url('js/heartbeat.js') }}"></script>
     {% block scripts %}{% endblock %}

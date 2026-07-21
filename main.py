@@ -13,7 +13,7 @@ app = None
 
 def _create_configured_app(env_selector: Optional[str] = None):
     env_file = resolve_env_file(env_selector)
-    load_env_file(env_file)
+    load_env_file(env_file, override=bool(env_selector))
 
     # Import after environment is loaded so setting.py picks the right values.
     from app_factory import create_app
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run Customer Behavioral dashboard locally.")
     parser.add_argument(
         "--env",
-        default="prod",
+        default="",
         help="Environment selector: dev, prod, or absolute/relative path to an env file.",
     )
     args = parser.parse_args()
